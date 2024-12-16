@@ -5,6 +5,8 @@
 #include "SDL3/SDL_render.h"
 #include "SDL3/SDL_video.h"
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+#include <string>
 
 namespace SdlPong {
 
@@ -13,11 +15,7 @@ enum Side {
     right,
 };
 
-enum BarDirection {
-    up,
-    down,
-    none
-};
+enum BarDirection { up, down, none };
 
 enum Id {
     ball,
@@ -61,17 +59,32 @@ class Body {
     void HandleCollision();
     void Reset();
 
-  private:
+  protected:
     /*Transform mTransform;   // pos*/
     GraphicBox mGraphicBox; // rect, color
     RigidBody mRigidBody;   // vel
     Id mId;
-    SDL_Rect mPostCollisionPos {};
-    int mPostCollisionXvel {};
-    int mPostCollisionYvel {};
-    bool mCollided {false};
+
+  private:
+    SDL_Rect mPostCollisionPos{};
+    int mPostCollisionXvel{};
+    int mPostCollisionYvel{};
+    bool mCollided{false};
     GraphicBox mInitGraphicBox;
     RigidBody mInitRigidBody;
+};
+
+class TextBody : Body {
+  public:
+    TextBody(std::string fontPath, GraphicBox gb);
+    ~TextBody();
+    void setText(std::string text, SDL_Renderer *renderer);
+    void Render(SDL_Renderer *renderer);
+
+  private:
+    std::string mText;
+    TTF_Font *mFont;
+    SDL_Texture *mFontTexture;
 };
 
 /*struct Collision {*/
@@ -115,6 +128,8 @@ class AppState {
     int mLeftScore;
     int mRightScore;
 
+    TextBody *mLeftScoreBody;
+    TextBody *mRightScoreBody;
 
     /*std::queue<Collision> mCollisions{};*/
 
