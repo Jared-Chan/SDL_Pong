@@ -385,4 +385,7 @@ void SdlPong::AppState::Render() {
     mLeftScoreBody->Render(mRenderer);
     mRightScoreBody->Render(mRenderer);
 
+    // Update screen
+    SDL_RenderPresent(mRenderer);
+
 } /* }}} */
