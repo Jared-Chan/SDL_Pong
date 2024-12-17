@@ -228,7 +228,7 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     mTBWalls[1] = mBottomWall;
 
     // Font
-    std::string fontPath = "./lazy.ttf";
+    std::string fontPath = "./slkscr.ttf";
     SDL_Rect leftScoreRect{
         .x = static_cast<int>(screenWidth / 4.), .y = ballH, .w = 0, .h = 0};
     SdlPong::GraphicBox leftScoreBox{.rect = leftScoreRect, .color = white};
