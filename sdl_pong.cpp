@@ -1,4 +1,5 @@
 #include "sdl_pong.hpp"
+#include "SDL3/SDL_log.h"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
 #include "SDL3/SDL_render.h"
@@ -7,9 +8,10 @@
 
 SdlPong::Body::Body(GraphicBox gb, RigidBody rb, SdlPong::Id id)
     : mGraphicBox{gb}, mRigidBody{rb}, mId{id}, mInitGraphicBox{gb},
-      mInitRigidBody{rb} {}
+      mInitRigidBody{rb}, mCollided{false} {}
 
 void SdlPong::Body::UpdatePos() {
+
     mGraphicBox.rect.x += mRigidBody.xvel;
     mGraphicBox.rect.y += mRigidBody.yvel;
 }
@@ -83,6 +85,7 @@ void SdlPong::Body::RegisterCollision(SdlPong::Body *body) {
 }
 
 void SdlPong::Body::HandleCollision() {
+
     if (mCollided) {
         mGraphicBox.rect = mPostCollisionPos;
         mRigidBody.xvel = mPostCollisionXvel;
@@ -91,25 +94,28 @@ void SdlPong::Body::HandleCollision() {
     }
 }
 
+SdlPong::Body::~Body() {
+    /*SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Destroying body.");*/
+}
+
+
 SdlPong::TextBody::TextBody(std::string fontPath, GraphicBox gb)
     : Body{gb, {}, {}}, mText{fontPath} {
 
-    constexpr int fontsize {28};
-    if( mFont = TTF_OpenFont( fontPath.c_str(), fontsize ); mFont == nullptr )
-    {
-        SDL_Log( "Could not load %s! SDL_ttf Error: %s\n", fontPath.c_str(), SDL_GetError() );
+    constexpr int fontsize{28};
+    if (mFont = TTF_OpenFont(fontPath.c_str(), fontsize); mFont == nullptr) {
+        SDL_Log("Could not load %s! SDL_ttf Error: %s\n", fontPath.c_str(),
+                SDL_GetError());
         assert(false && "Could not load font");
     }
 }
 
-void SdlPong::TextBody::Render(SDL_Renderer *renderer)
-{
+void SdlPong::TextBody::Render(SDL_Renderer *renderer) {
     // Set texture position
-    SDL_FRect dstRect = {
-        static_cast<float>(mGraphicBox.rect.x), 
-        static_cast<float>(mGraphicBox.rect.y), 
-        static_cast<float>(mGraphicBox.rect.w), 
-        static_cast<float>(mGraphicBox.rect.h)};
+    SDL_FRect dstRect = {static_cast<float>(mGraphicBox.rect.x),
+                         static_cast<float>(mGraphicBox.rect.y),
+                         static_cast<float>(mGraphicBox.rect.w),
+                         static_cast<float>(mGraphicBox.rect.h)};
     // Render texture
     SDL_RenderTexture(renderer, mFontTexture, NULL, &dstRect);
 }
@@ -141,8 +147,7 @@ void SdlPong::TextBody::setText(std::string text, SDL_Renderer *renderer) {
     }
 }
 
-SdlPong::TextBody::~TextBody()
-{
+SdlPong::TextBody::~TextBody() {
     SDL_DestroyTexture(mFontTexture);
     TTF_CloseFont(mFont);
 }
@@ -219,8 +224,19 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     mLeftWall = new Body(leftWallBox, stationery, SdlPong::leftWall);
     mRightWall = new Body(rightWallBox, stationery, SdlPong::rightWall);
 
+    mBars[0] = mLeftBar;
+    mBars[1] = mRightBar;
+    mWalls[0] = mLeftWall;
+    mWalls[1] = mRightWall;
+    mWalls[2] = mTopWall;
+    mWalls[3] = mBottomWall;
+    mSideWalls[0] = mLeftWall;
+    mSideWalls[1] = mRightWall;
+    mTBWalls[0] = mTopWall;
+    mTBWalls[1] = mBottomWall;
+
     // Font
-    std::string fontPath = "lazy.ttf";
+    std::string fontPath = "./lazy.ttf";
     SDL_Rect leftScoreRect{
         .x = static_cast<int>(screenWidth / 4. + kPadding - ballW / 2.),
         .y = ballH,
@@ -236,7 +252,7 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
 
     mLeftScoreBody = new TextBody(fontPath, leftScoreBox);
     mRightScoreBody = new TextBody(fontPath, rightScoreBox);
-    
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "AppState initialized.");
 }
 /* }}} */
 
@@ -251,18 +267,17 @@ SdlPong::AppState::~AppState() {
     delete mLeftWall;
     delete mRightWall;
 
+    delete mLeftScoreBody;
+    delete mRightScoreBody;
 }
 /* }}} */
 
 /* void SdlPong::AppState::incScore(SdlPong::Side side) {{{ */
 void SdlPong::AppState::incScore(SdlPong::Side side) {
-    if (side == SdlPong::left)
-    {
+    if (side == SdlPong::left) {
         std::string scoreString = std::to_string(++mLeftScore);
         mLeftScoreBody->setText(scoreString, mRenderer);
-    }
-    else if (side == SdlPong::right)
-    {
+    } else if (side == SdlPong::right) {
         std::string scoreString = std::to_string(++mRightScore);
         mRightScoreBody->setText(scoreString, mRenderer);
     }
@@ -270,13 +285,10 @@ void SdlPong::AppState::incScore(SdlPong::Side side) {
 
 /* void SdlPong::AppState::decScore(SdlPong::Side side) {{{ */
 void SdlPong::AppState::decScore(SdlPong::Side side) {
-    if (side == SdlPong::left)
-    {
+    if (side == SdlPong::left) {
         std::string scoreString = std::to_string(--mLeftScore);
         mLeftScoreBody->setText(scoreString, mRenderer);
-    }
-    else if (side == SdlPong::right)
-    {
+    } else if (side == SdlPong::right) {
         std::string scoreString = std::to_string(--mRightScore);
         mRightScoreBody->setText(scoreString, mRenderer);
     }
@@ -372,6 +384,5 @@ void SdlPong::AppState::Render() {
     // Render scores
     mLeftScoreBody->Render(mRenderer);
     mRightScoreBody->Render(mRenderer);
-
 
 } /* }}} */

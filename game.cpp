@@ -1,4 +1,5 @@
 
+#include "SDL3/SDL_log.h"
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include "sdl_pong.hpp"
 #include <SDL3/SDL.h>
@@ -19,6 +20,8 @@ static const struct {
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
+    SDL_SetLogPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_DEBUG);
+
     if (!SDL_SetAppMetadata("Pong", "1.0", "com.example.pong-1234")) {
         return SDL_APP_FAILURE;
     }
@@ -30,7 +33,15 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         }
     }
 
+    // Initialize font loading
+    if (!TTF_Init()) {
+        SDL_Log("SDL_ttf could not initialize! SDL_ttf error: %s\n",
+                SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
     SdlPong::AppState *as = new SdlPong::AppState(screenWidth, screenHeight);
+    /*SdlPong::AppState *as = static_cast<SdlPong::AppState *>(SDL_calloc(1, sizeof(SdlPong::AppState)));*/
     if (!as) {
         return SDL_APP_FAILURE;
     } else {
@@ -40,14 +51,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         return SDL_APP_FAILURE;
     }
-    if (!SDL_CreateWindowAndRenderer("examples/demo/woodeneye-008", 640, 480, 0,
+    if (!SDL_CreateWindowAndRenderer("sdl_pong", 640, 480, 0,
                                      &as->mWindow, &as->mRenderer)) {
-        return SDL_APP_FAILURE;
-    }
-    // Initialize font loading
-    if (!TTF_Init()) {
-        SDL_Log("SDL_ttf could not initialize! SDL_ttf error: %s\n",
-                SDL_GetError());
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderVSync(as->mRenderer, true);
@@ -104,5 +109,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
     SdlPong::AppState *as = static_cast<SdlPong::AppState *>(appstate);
     delete as;
+    /*SDL_free(appstate); // just free the memory, SDL will clean up the window/renderer for us.*/
     TTF_Quit();
 }
