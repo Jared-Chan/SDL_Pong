@@ -28,21 +28,14 @@ enum Id {
 };
 
 struct GraphicBox {
-    SDL_Rect rect;
+    SDL_Rect rect; // size and position
     SDL_Color color;
-    // doubles as collision box
 };
 
-struct RigidBody {
+struct RigidBody { // velocity
     int xvel;
     int yvel;
-    // no mass
 };
-
-/*using Transform = struct {*/
-/*    SDL_Point pos; // x and y*/
-/*    // no rotation or scale*/
-/*};*/
 
 class Body {
   public:
@@ -60,9 +53,8 @@ class Body {
     void Reset();
 
   protected:
-    /*Transform mTransform;   // pos*/
-    GraphicBox mGraphicBox; // rect, color
-    RigidBody mRigidBody;   // vel
+    GraphicBox mGraphicBox;
+    RigidBody mRigidBody;
     Id mId;
 
   private:
@@ -86,11 +78,6 @@ class TextBody : Body {
     TTF_Font *mFont;
     SDL_Texture *mFontTexture;
 };
-
-/*struct Collision {*/
-/*    Body *b1{nullptr};*/
-/*    Body *b2{nullptr};*/
-/*};*/
 
 class AppState {
 
@@ -133,8 +120,6 @@ class AppState {
     TextBody *mLeftScoreBody;
     TextBody *mRightScoreBody;
 
-    /*std::queue<Collision> mCollisions{};*/
-
     Body *mBall;
     Body *mLeftBar;
     Body *mRightBar;
@@ -145,14 +130,11 @@ class AppState {
     Body *mLeftWall;
     Body *mRightWall;
 
+    // For interating through
     Body *mBars[kNumBars] = {mLeftBar, mRightBar};
     Body *mWalls[kNumWalls] = {mLeftWall, mRightWall, mTopWall, mBottomWall};
     Body *mSideWalls[kNumSideWalls] = {mLeftWall, mRightWall};
     Body *mTBWalls[kNumTBWalls] = {mTopWall, mBottomWall};
-
-    // Potential:
-    // pause
-    // rounds
 };
 
 } // namespace SdlPong

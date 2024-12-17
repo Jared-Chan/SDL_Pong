@@ -42,6 +42,10 @@ void SdlPong::Body::Render(SDL_Renderer *renderer) {
 
 SdlPong::Id SdlPong::Body::getId() { return mId; }
 
+/*void SdlPong::Body::RegisterCollision(SdlPong::Body *body) {{{
+ * Figure out the position and velocity after collision.
+ * Does not update them yet in order for other bodies to register collisions.
+ * */
 void SdlPong::Body::RegisterCollision(SdlPong::Body *body) {
 
     if (!(mId == SdlPong::ball || mId == SdlPong::leftBar ||
@@ -55,34 +59,58 @@ void SdlPong::Body::RegisterCollision(SdlPong::Body *body) {
     mPostCollisionYvel = mRigidBody.yvel;
 
     if (mId == SdlPong::ball) {
-        if (body->getId() == SdlPong::leftBar ||
-            body->getId() == SdlPong::rightBar) {
-            mPostCollisionXvel = -mPostCollisionXvel;
+
+        // Bounces off left or right bar to the opposite direction
+        // (only setting post_vel to -vel may cause the ball to get stuck in the
+        // bar if it clipped too much
+        // Bounces off top or bottom wall
+        if (body->getId() == SdlPong::leftBar) {
+
+            mPostCollisionXvel = mPostCollisionXvel < 0 ? -mPostCollisionXvel
+                                                        : mPostCollisionXvel;
             mPostCollisionYvel = body->GetVel().yvel;
+
+        } else if (body->getId() == SdlPong::rightBar) {
+
+            mPostCollisionXvel = mPostCollisionXvel > 0 ? -mPostCollisionXvel
+                                                        : mPostCollisionXvel;
+            mPostCollisionYvel = body->GetVel().yvel;
+
         } else if (body->getId() == SdlPong::leftWall ||
                    body->getId() == SdlPong::rightWall) {
+
             // AppState handles this case
             mCollided = false;
+
         } else if (body->getId() == SdlPong::topWall ||
                    body->getId() == SdlPong::bottomWall) {
+
             mPostCollisionYvel = -mPostCollisionYvel;
+
         } else {
             assert(false && "Unknown collision body.");
         }
     } else if (mId == SdlPong::leftBar || mId == SdlPong::rightBar) {
+
+        // Stop bars from going out of bounds
+
         if (body->getId() == SdlPong::topWall) {
+
             mPostCollisionYvel = 0;
             mPostCollisionPos.y =
                 body->GetCollisionBox()->y + body->GetCollisionBox()->h;
+
         } else if (body->getId() == SdlPong::bottomWall) {
+
             mPostCollisionYvel = 0;
             mPostCollisionPos.y =
                 body->GetCollisionBox()->y - mGraphicBox.rect.h;
+
         } else {
             assert(false && "Unknown collision body.");
         }
     }
-}
+} /* }}} */
 
 void SdlPong::Body::HandleCollision() {
 
@@ -94,9 +122,7 @@ void SdlPong::Body::HandleCollision() {
     }
 }
 
-SdlPong::Body::~Body() {
-    /*SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Destroying body.");*/
-}
+SdlPong::Body::~Body() {}
 
 SdlPong::TextBody::TextBody(std::string fontPath, GraphicBox gb)
     : Body{gb, {}, {}}, mText{fontPath} {
@@ -174,7 +200,6 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
 
     SDL_Color white{0xFF, 0xFF, 0xFF, 0xFF};
     SdlPong::RigidBody stationery{.xvel = 0, .yvel = 0};
-    /*SdlPong::RigidBody rightward{.xvel = barVel, .yvel = 0};*/
 
     // Ball is in the middle of the screen
     SDL_Rect ballRect{.x = static_cast<int>(screenWidth / 2. - ballW / 2.),
@@ -229,9 +254,13 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
 
     // Font
     std::string fontPath = "./slkscr.ttf";
-    SDL_Rect leftScoreRect{
-        .x = static_cast<int>(screenWidth / 4.), .y = ballH, .w = 0, .h = 0};
+
+    SDL_Rect leftScoreRect{.x = static_cast<int>(screenWidth * 1 / 4.),
+                           .y = ballH,
+                           .w = 0,
+                           .h = 0};
     SdlPong::GraphicBox leftScoreBox{.rect = leftScoreRect, .color = white};
+
     SDL_Rect rightScoreRect{.x = static_cast<int>(screenWidth * 3. / 4.),
                             .y = ballH,
                             .w = 0,
@@ -263,7 +292,7 @@ SdlPong::AppState::~AppState() {
 
 void SdlPong::AppState::startGame() {
     mBall->Reset();
-    mBall->SetVel({.xvel=barVel, .yvel=0});
+    mBall->SetVel({.xvel = barVel, .yvel = 0});
     // incScore must be called at least once to render text, and it must be
     // called after the window and renderer are created
     mLeftScore = -1;
@@ -331,6 +360,11 @@ void SdlPong::AppState::UpdatePositions() {
 /* void SdlPong::AppState::CheckCollisions() {{{ */
 void SdlPong::AppState::CheckCollisions() {
 
+    // Collisions to check:
+    // ball against bars
+    // ball against walls
+    // bars against top and bottom wall
+
     for (int i{0}; i < kNumBars; ++i) {
 
         if (SDL_HasRectIntersection(mBars[i]->GetCollisionBox(),
@@ -341,16 +375,14 @@ void SdlPong::AppState::CheckCollisions() {
         for (int j{0}; j < kNumSideWalls; ++j) {
             if (SDL_HasRectIntersection(mBall->GetCollisionBox(),
                                         mSideWalls[j]->GetCollisionBox())) {
-                /*mBall->RegisterCollision(mSideWalls[j]);*/
                 // AppState handles this case
                 mBall->Reset();
                 if (mSideWalls[j]->getId() == SdlPong::leftWall) {
                     incScore(SdlPong::right);
-                    mBall->SetVel({.xvel=-barVel, .yvel=0});
-                }
-                else if (mSideWalls[j]->getId() == SdlPong::rightWall) {
+                    mBall->SetVel({.xvel = -barVel, .yvel = 0});
+                } else if (mSideWalls[j]->getId() == SdlPong::rightWall) {
                     incScore(SdlPong::left);
-                    mBall->SetVel({.xvel=barVel, .yvel=0});
+                    mBall->SetVel({.xvel = barVel, .yvel = 0});
                 }
             }
         }
@@ -374,6 +406,7 @@ void SdlPong::AppState::ProcessCollisions() {
     mBall->HandleCollision();
 
 } /* }}} */
+
 /* void SdlPong::AppState::Render() {{{ */
 void SdlPong::AppState::Render() {
 

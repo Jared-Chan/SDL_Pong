@@ -50,8 +50,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         return SDL_APP_FAILURE;
     }
-    if (!SDL_CreateWindowAndRenderer("sdl_pong", 640, 480, 0,
-                                     &as->mWindow, &as->mRenderer)) {
+    if (!SDL_CreateWindowAndRenderer("sdl_pong", 640, 480, 0, &as->mWindow,
+                                     &as->mRenderer)) {
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderVSync(as->mRenderer, true);
