@@ -41,7 +41,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     }
 
     SdlPong::AppState *as = new SdlPong::AppState(screenWidth, screenHeight);
-    /*SdlPong::AppState *as = static_cast<SdlPong::AppState *>(SDL_calloc(1, sizeof(SdlPong::AppState)));*/
     if (!as) {
         return SDL_APP_FAILURE;
     } else {
@@ -56,6 +55,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         return SDL_APP_FAILURE;
     }
     SDL_SetRenderVSync(as->mRenderer, true);
+
+    as->startGame();
 
     return SDL_APP_CONTINUE;
 }
@@ -109,6 +110,5 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
     SdlPong::AppState *as = static_cast<SdlPong::AppState *>(appstate);
     delete as;
-    /*SDL_free(appstate); // just free the memory, SDL will clean up the window/renderer for us.*/
     TTF_Quit();
 }

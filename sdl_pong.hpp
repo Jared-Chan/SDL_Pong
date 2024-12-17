@@ -97,6 +97,8 @@ class AppState {
   public:
     AppState(int screenWidth, int screenHeight);
 
+    void startGame();
+
     void incScore(Side side);
     void decScore(Side side);
     void moveBar(Side side, BarDirection dir);
@@ -116,7 +118,7 @@ class AppState {
 
   private:
     // Outer padding for collision boxes
-    static constexpr int kPadding{1};
+    static constexpr int kPadding{10};
 
     static constexpr int kNumBars{2};
     static constexpr int kNumWalls{4};

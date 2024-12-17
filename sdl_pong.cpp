@@ -37,7 +37,7 @@ void SdlPong::Body::Render(SDL_Renderer *renderer) {
                           static_cast<float>(mGraphicBox.rect.h)};
     SDL_SetRenderDrawColor(renderer, mGraphicBox.color.r, mGraphicBox.color.g,
                            mGraphicBox.color.b, mGraphicBox.color.a);
-    SDL_RenderRect(renderer, &drawingRect);
+    SDL_RenderFillRect(renderer, &drawingRect);
 }
 
 SdlPong::Id SdlPong::Body::getId() { return mId; }
@@ -98,7 +98,6 @@ SdlPong::Body::~Body() {
     /*SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Destroying body.");*/
 }
 
-
 SdlPong::TextBody::TextBody(std::string fontPath, GraphicBox gb)
     : Body{gb, {}, {}}, mText{fontPath} {
 
@@ -154,17 +153,17 @@ SdlPong::TextBody::~TextBody() {
 
 /* SdlPong::AppState::AppState {{{ */
 SdlPong::AppState::AppState(int screenWidth, int screenHeight)
-    : mLeftScore{0}, mRightScore{0},
-      barVel{static_cast<int>(screenHeight / 4.0)}, mBall{nullptr},
+    : mLeftScore{-1}, mRightScore{-1},
+      barVel{static_cast<int>(screenHeight / 30.0)}, mBall{nullptr},
       mLeftBar{nullptr}, mRightBar{nullptr}, mTopWall{nullptr},
       mBottomWall{nullptr}, mLeftWall{nullptr}, mRightWall{nullptr} {
     // SDL_AppInit will provide window and renderer
 
     // Dimensions based on screen size
-    int ballW{static_cast<int>(screenWidth / 10.0)};
+    int ballW{static_cast<int>(screenWidth / 25.0)};
     int ballH{ballW};
 
-    int barH{static_cast<int>(screenHeight / 5.0)};
+    int barH{static_cast<int>(screenHeight / 8.0)};
     int barW{ballW};
 
     int TBwallH{kPadding};
@@ -178,41 +177,34 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     SdlPong::RigidBody rightward{.xvel = 0, .yvel = 0};
 
     // Ball is in the middle of the screen
-    SDL_Rect ballRect{
-        .x = static_cast<int>(screenWidth / 2. + kPadding - ballW / 2.),
-        .y = static_cast<int>(screenWidth / 2. + kPadding - ballW / 2.),
-        .w = ballW,
-        .h = ballH};
+    SDL_Rect ballRect{.x = static_cast<int>(screenWidth / 2. - ballW / 2.),
+                      .y = static_cast<int>(screenHeight / 2. - ballW / 2.),
+                      .w = ballW,
+                      .h = ballH};
     SdlPong::GraphicBox ballBox{.rect = ballRect, .color = white};
 
-    SDL_Rect leftBarRect{
-        .x = kPadding,
-        .y = static_cast<int>(screenWidth / 2. + kPadding - barH / 2.),
-        .w = barW,
-        .h = barH};
+    SDL_Rect leftBarRect{.x = 0,
+                         .y = static_cast<int>(screenWidth / 2. - barH / 2.),
+                         .w = barW,
+                         .h = barH};
     SdlPong::GraphicBox leftBarBox{.rect = leftBarRect, .color = white};
-    SDL_Rect rightBarRect{
-        .x = screenWidth + kPadding - barW,
-        .y = static_cast<int>(screenWidth / 2. + kPadding - barH / 2.),
-        .w = barW,
-        .h = barH};
+    SDL_Rect rightBarRect{.x = screenWidth - barW,
+                          .y = static_cast<int>(screenWidth / 2. - barH / 2.),
+                          .w = barW,
+                          .h = barH};
     SdlPong::GraphicBox rightBarBox{.rect = rightBarRect, .color = white};
 
-    SDL_Rect topWallRect{.x = kPadding, .y = 0, .w = TBwallW, .h = TBwallH};
+    SDL_Rect topWallRect{.x = 0, .y = -kPadding, .w = TBwallW, .h = TBwallH};
     SdlPong::GraphicBox topWallBox{.rect = topWallRect, .color = white};
-    SDL_Rect bottomWallRect{.x = kPadding,
-                            .y = screenHeight + kPadding,
-                            .w = TBwallW,
-                            .h = TBwallH};
+    SDL_Rect bottomWallRect{
+        .x = 0, .y = screenHeight, .w = TBwallW, .h = TBwallH};
     SdlPong::GraphicBox bottomWallBox{.rect = bottomWallRect, .color = white};
 
     SDL_Rect leftWallRect{
-        .x = 0, .y = kPadding, .w = sideWallW, .h = sideWallH};
+        .x = -kPadding, .y = 0, .w = sideWallW, .h = sideWallH};
     SdlPong::GraphicBox leftWallBox{.rect = leftWallRect, .color = white};
-    SDL_Rect rightWallRect{.x = screenWidth + kPadding,
-                           .y = kPadding,
-                           .w = sideWallW,
-                           .h = sideWallH};
+    SDL_Rect rightWallRect{
+        .x = screenWidth, .y = 0, .w = sideWallW, .h = sideWallH};
     SdlPong::GraphicBox rightWallBox{.rect = rightWallRect, .color = white};
 
     mBall = new Body(ballBox, rightward, SdlPong::ball);
@@ -238,20 +230,17 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     // Font
     std::string fontPath = "./lazy.ttf";
     SDL_Rect leftScoreRect{
-        .x = static_cast<int>(screenWidth / 4. + kPadding - ballW / 2.),
-        .y = ballH,
-        .w = 0,
-        .h = 0};
+        .x = static_cast<int>(screenWidth / 4.), .y = ballH, .w = 0, .h = 0};
     SdlPong::GraphicBox leftScoreBox{.rect = leftScoreRect, .color = white};
-    SDL_Rect rightScoreRect{
-        .x = static_cast<int>(screenWidth * 3. / 4. + kPadding - ballW / 2.),
-        .y = ballH,
-        .w = 0,
-        .h = 0};
+    SDL_Rect rightScoreRect{.x = static_cast<int>(screenWidth * 3. / 4.),
+                            .y = ballH,
+                            .w = 0,
+                            .h = 0};
     SdlPong::GraphicBox rightScoreBox{.rect = rightScoreRect, .color = white};
 
     mLeftScoreBody = new TextBody(fontPath, leftScoreBox);
     mRightScoreBody = new TextBody(fontPath, rightScoreBox);
+
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "AppState initialized.");
 }
 /* }}} */
@@ -271,6 +260,16 @@ SdlPong::AppState::~AppState() {
     delete mRightScoreBody;
 }
 /* }}} */
+
+void SdlPong::AppState::startGame() {
+    mBall->Reset();
+    // incScore must be called at least once to render text, and it must be
+    // called after the window and renderer are created
+    mLeftScore = -1;
+    mRightScore = -1;
+    incScore(left);
+    incScore(right);
+}
 
 /* void SdlPong::AppState::incScore(SdlPong::Side side) {{{ */
 void SdlPong::AppState::incScore(SdlPong::Side side) {
