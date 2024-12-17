@@ -1,5 +1,6 @@
 
 #include "SDL3/SDL_log.h"
+#include <SDL3/SDL_keycode.h>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include "sdl_pong.hpp"
 #include <SDL3/SDL.h>
@@ -87,7 +88,9 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
         if (sym == SDLK_DOWN)
             as->moveBar(SdlPong::right, SdlPong::down);
         if (sym == SDLK_SPACE)
-            as->startGame();
+            as->startGame(false);
+        if (sym == SDLK_RETURN)
+            as->startGame(true);
         break;
     }
     case SDL_EVENT_KEY_UP: {

@@ -84,7 +84,7 @@ class AppState {
   public:
     AppState(int screenWidth, int screenHeight);
 
-    void startGame();
+    void startGame(bool ai);
 
     void incScore(Side side);
     void decScore(Side side);
@@ -111,6 +111,8 @@ class AppState {
     static constexpr int kNumWalls{4};
     static constexpr int kNumTBWalls{2};
     static constexpr int kNumSideWalls{2};
+
+    bool mAI;
 
     int barVel;
 

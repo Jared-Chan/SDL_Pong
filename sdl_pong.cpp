@@ -179,7 +179,7 @@ SdlPong::TextBody::~TextBody() {
 
 /* SdlPong::AppState::AppState {{{ */
 SdlPong::AppState::AppState(int screenWidth, int screenHeight)
-    : mLeftScore{-1}, mRightScore{-1},
+    : mLeftScore{-1}, mRightScore{-1}, mAI{false},
       barVel{static_cast<int>(screenHeight / 75.0)}, mBall{nullptr},
       mLeftBar{nullptr}, mRightBar{nullptr}, mTopWall{nullptr},
       mBottomWall{nullptr}, mLeftWall{nullptr}, mRightWall{nullptr} {
@@ -290,7 +290,8 @@ SdlPong::AppState::~AppState() {
 }
 /* }}} */
 
-void SdlPong::AppState::startGame() {
+void SdlPong::AppState::startGame(bool ai) {
+    mAI = ai;
     mBall->Reset();
     mBall->SetVel({.xvel = barVel, .yvel = 0});
     // incScore must be called at least once to render text, and it must be
@@ -338,7 +339,7 @@ void SdlPong::AppState::moveBar(SdlPong::Side side, SdlPong::BarDirection dir) {
     default:
         assert(false && "Invaild direction");
     }
-    if (side == SdlPong::left)
+    if (side == SdlPong::left && (!mAI))
         mLeftBar->SetVel(newRb);
     else if (side == SdlPong::right)
         mRightBar->SetVel(newRb);
@@ -353,6 +354,17 @@ SDL_Renderer *SdlPong::AppState::getRenderer() { return mRenderer; } /* }}} */
 /* void SdlPong::AppState::UpdatePositions() {{{ */
 void SdlPong::AppState::UpdatePositions() {
     mBall->UpdatePos();
+    if (mAI) { // elementary AI
+        SdlPong::RigidBody newRb{0, 0};
+        if (mBall->GetCollisionBox()->y - mLeftBar->GetCollisionBox()->y > 0)
+            newRb.yvel = barVel;
+        else if (mBall->GetCollisionBox()->y - mLeftBar->GetCollisionBox()->y <
+                 0)
+            newRb.yvel = -barVel;
+        else
+            newRb.yvel = 0;
+        mLeftBar->SetVel(newRb);
+    }
     mLeftBar->UpdatePos();
     mRightBar->UpdatePos();
 } /* }}} */
