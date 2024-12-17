@@ -56,8 +56,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     }
     SDL_SetRenderVSync(as->mRenderer, true);
 
-    as->startGame();
-
     return SDL_APP_CONTINUE;
 }
 
@@ -88,6 +86,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             as->moveBar(SdlPong::right, SdlPong::up);
         if (sym == SDLK_DOWN)
             as->moveBar(SdlPong::right, SdlPong::down);
+        if (sym == SDLK_SPACE)
+            as->startGame();
         break;
     }
     case SDL_EVENT_KEY_UP: {

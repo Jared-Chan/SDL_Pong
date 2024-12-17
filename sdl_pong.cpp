@@ -154,7 +154,7 @@ SdlPong::TextBody::~TextBody() {
 /* SdlPong::AppState::AppState {{{ */
 SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     : mLeftScore{-1}, mRightScore{-1},
-      barVel{static_cast<int>(screenHeight / 30.0)}, mBall{nullptr},
+      barVel{static_cast<int>(screenHeight / 75.0)}, mBall{nullptr},
       mLeftBar{nullptr}, mRightBar{nullptr}, mTopWall{nullptr},
       mBottomWall{nullptr}, mLeftWall{nullptr}, mRightWall{nullptr} {
     // SDL_AppInit will provide window and renderer
@@ -163,7 +163,7 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     int ballW{static_cast<int>(screenWidth / 25.0)};
     int ballH{ballW};
 
-    int barH{static_cast<int>(screenHeight / 8.0)};
+    int barH{static_cast<int>(screenHeight / 6.0)};
     int barW{ballW};
 
     int TBwallH{kPadding};
@@ -174,7 +174,7 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
 
     SDL_Color white{0xFF, 0xFF, 0xFF, 0xFF};
     SdlPong::RigidBody stationery{.xvel = 0, .yvel = 0};
-    SdlPong::RigidBody rightward{.xvel = 0, .yvel = 0};
+    /*SdlPong::RigidBody rightward{.xvel = barVel, .yvel = 0};*/
 
     // Ball is in the middle of the screen
     SDL_Rect ballRect{.x = static_cast<int>(screenWidth / 2. - ballW / 2.),
@@ -184,12 +184,12 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
     SdlPong::GraphicBox ballBox{.rect = ballRect, .color = white};
 
     SDL_Rect leftBarRect{.x = 0,
-                         .y = static_cast<int>(screenWidth / 2. - barH / 2.),
+                         .y = static_cast<int>(screenHeight / 2. - barH / 2.),
                          .w = barW,
                          .h = barH};
     SdlPong::GraphicBox leftBarBox{.rect = leftBarRect, .color = white};
     SDL_Rect rightBarRect{.x = screenWidth - barW,
-                          .y = static_cast<int>(screenWidth / 2. - barH / 2.),
+                          .y = static_cast<int>(screenHeight / 2. - barH / 2.),
                           .w = barW,
                           .h = barH};
     SdlPong::GraphicBox rightBarBox{.rect = rightBarRect, .color = white};
@@ -207,7 +207,7 @@ SdlPong::AppState::AppState(int screenWidth, int screenHeight)
         .x = screenWidth, .y = 0, .w = sideWallW, .h = sideWallH};
     SdlPong::GraphicBox rightWallBox{.rect = rightWallRect, .color = white};
 
-    mBall = new Body(ballBox, rightward, SdlPong::ball);
+    mBall = new Body(ballBox, stationery, SdlPong::ball);
     mLeftBar = new Body(leftBarBox, stationery, SdlPong::leftBar);
     mRightBar = new Body(rightBarBox, stationery, SdlPong::rightBar);
 
@@ -263,6 +263,7 @@ SdlPong::AppState::~AppState() {
 
 void SdlPong::AppState::startGame() {
     mBall->Reset();
+    mBall->SetVel({.xvel=barVel, .yvel=0});
     // incScore must be called at least once to render text, and it must be
     // called after the window and renderer are created
     mLeftScore = -1;
@@ -343,10 +344,14 @@ void SdlPong::AppState::CheckCollisions() {
                 /*mBall->RegisterCollision(mSideWalls[j]);*/
                 // AppState handles this case
                 mBall->Reset();
-                if (mSideWalls[j]->getId() == SdlPong::leftWall)
+                if (mSideWalls[j]->getId() == SdlPong::leftWall) {
                     incScore(SdlPong::right);
-                else if (mSideWalls[j]->getId() == SdlPong::rightWall)
+                    mBall->SetVel({.xvel=-barVel, .yvel=0});
+                }
+                else if (mSideWalls[j]->getId() == SdlPong::rightWall) {
                     incScore(SdlPong::left);
+                    mBall->SetVel({.xvel=barVel, .yvel=0});
+                }
             }
         }
         for (int j{0}; j < kNumTBWalls; ++j) {
