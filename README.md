@@ -14,5 +14,16 @@ One player
 1. Press <kbd>Return</kbd> to start a new game.
 2. <kbd>Up</kbd> and <kbd>Down</kbd> control the right bar
 
+## Build and run
+
+```
+mkdir build
+cd build
+cmake ..
+make
+cp ../slkscr.ttf .
+./sdl_pong
+```
+
 Font: [Silkscreen](https://www.fontsquirrel.com/fonts/Silkscreen) ([License](https://www.fontsquirrel.com/license/Silkscreen))
 
