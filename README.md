@@ -14,11 +14,11 @@ One player
 1. Press <kbd>Return</kbd> to start a new game.
 2. <kbd>Up</kbd> and <kbd>Down</kbd> control the right bar
 
-[Try it here.](https://jared-chan.github.io/demo/sdl_pong.html)
+[Try it here.](https://blog-egd.pages.dev/demo/sdl_pong)
 
 ## How it's made
 
-[How to make pong in a day.](https://jared-chan.github.io/project/2024/12/19/How-to-make-pong-using-C++-and-SDL3-in-a-day.html)
+[How to make pong in a day.](https://blog-egd.pages.dev/project/2024/12/19/How-to-make-pong-using-C++-and-SDL3-in-a-day)
 
 ## Build and run
 
